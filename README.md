@@ -1,4 +1,4 @@
-# Production Kubernetes Platform
+﻿# Production Kubernetes Platform
 
 A hands-on DevOps project that packages a Flask application, connects it
 to PostgreSQL, deploys it to Kubernetes with Helm, automates image
@@ -70,27 +70,27 @@ request metrics are not yet documented as complete features.
 
 ``` text
 production-kubernetes-platform/
-├── backend/
-│   ├── app.py
-│   ├── Dockerfile
-│   └── ...
-├── k8s/
-│   ├── ...
-│   └── postgres-secret.yaml       # local secret manifest; do not commit
-├── helm/
-│   └── production-platform/
-│       ├── Chart.yaml
-│       ├── values.yaml
-│       └── templates/
-├── monitoring/
-│   ├── values.yaml
-│   └── kube-prometheus-stack/     # locally pulled Helm chart; do not commit rendered output
-├── scripts/
-│   └── deploy.ps1
-├── .github/
-│   └── workflows/
-├── .gitignore
-└── README.md
+â”œâ”€â”€ backend/
+â”‚   â”œâ”€â”€ app.py
+â”‚   â”œâ”€â”€ Dockerfile
+â”‚   â””â”€â”€ ...
+â”œâ”€â”€ k8s/
+â”‚   â”œâ”€â”€ ...
+â”‚   â””â”€â”€ postgres-secret.yaml       # local secret manifest; do not commit
+â”œâ”€â”€ helm/
+â”‚   â””â”€â”€ production-platform/
+â”‚       â”œâ”€â”€ Chart.yaml
+â”‚       â”œâ”€â”€ values.yaml
+â”‚       â””â”€â”€ templates/
+â”œâ”€â”€ monitoring/
+â”‚   â”œâ”€â”€ values.yaml
+â”‚   â””â”€â”€ kube-prometheus-stack/     # locally pulled Helm chart; do not commit rendered output
+â”œâ”€â”€ scripts/
+â”‚   â””â”€â”€ deploy.ps1
+â”œâ”€â”€ .github/
+â”‚   â””â”€â”€ workflows/
+â”œâ”€â”€ .gitignore
+â””â”€â”€ README.md
 ```
 
 Some chart or manifest filenames may differ as the project evolves. Keep
@@ -388,10 +388,10 @@ Rotate any credential that has accidentally been committed or exposed.
   Automated backend tests             6 tests previously passed
 
   Docker image build and Docker Hub   Implemented through GitHub Actions
-  publishing                          
+  publishing
 
   Kubernetes backend and PostgreSQL   Implemented in local cluster
-  deployment                          
+  deployment
 
   PostgreSQL PVC                      Restart persistence verified
                                       locally
@@ -406,7 +406,7 @@ Rotate any credential that has accidentally been committed or exposed.
                                       control-plane targets report down
 
   Flask application metrics and       Remaining work
-  dedicated dashboard                 
+  dedicated dashboard
 
   Persistent monitoring storage,      Not configured/verified as
   backups, and alert delivery         production capabilities
