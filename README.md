@@ -1,603 +1,432 @@
-\# Production Kubernetes Platform
+# Production Kubernetes Platform
 
+A hands-on DevOps project that packages a Flask application, connects it
+to PostgreSQL, deploys it to Kubernetes with Helm, automates image
+builds with GitHub Actions, and adds Prometheus/Grafana monitoring.
 
+> **Environment:** Local Kubernetes on Docker Desktop. This project does
+> not require an AWS or Azure cluster.
 
-A hands-on DevOps portfolio project demonstrating containerized application deployment, Kubernetes orchestration, PostgreSQL integration, persistent storage, Helm-based deployments, automated testing, and CI workflows.
+## Project Goals
 
+-   Build and test a small containerized backend.
+-   Run application and database workloads in Kubernetes.
+-   Use Kubernetes probes, resource requests/limits, and container
+    security controls.
+-   Manage application deployment with Helm.
+-   Build and publish Docker images through GitHub Actions.
+-   Monitor Kubernetes and monitoring-stack health with Prometheus and
+    Grafana.
 
+## Technology Stack
 
-\## Project Overview
+  Area                      Tools
+  ------------------------- --------------------------------------------------------
+  Application               Python, Flask, Gunicorn
+  Database                  PostgreSQL
+  Containers                Docker
+  Orchestration             Kubernetes, kubectl
+  Packaging and release     Helm
+  CI and image publishing   GitHub Actions, Docker Hub
+  Monitoring                Prometheus, Grafana, kube-state-metrics, Node Exporter
+  Automation                PowerShell
 
+## Architecture
 
-
-This project deploys a Python Flask backend on Kubernetes and integrates it with PostgreSQL. It demonstrates practical implementation of application health checks, container security, resource management, persistent volumes, and deployment automation.
-
-
-
-\## Technology Stack
-
-
-
-\* \*\*Application:\*\* Python, Flask, Gunicorn
-
-\* \*\*Containerization:\*\* Docker
-
-\* \*\*Orchestration:\*\* Kubernetes
-
-\* \*\*Database:\*\* PostgreSQL
-
-\* \*\*Package Management:\*\* Helm
-
-\* \*\*CI:\*\* GitHub Actions
-
-\* \*\*Testing:\*\* Python `unittest`
-
-\* \*\*Monitoring:\*\* Prometheus and Grafana — planned integration
-
-
-
-\## Architecture
-
-
-
-```text
-
-&#x20;                   Developer
-
-&#x20;                       |
-
-&#x20;                       v
-
-&#x20;                 GitHub Repository
-
-&#x20;                       |
-
-&#x20;                       v
-
-&#x20;                GitHub Actions CI
-
-&#x20;                /              \\
-
-&#x20;               v                v
-
-&#x20;        Automated Tests    Docker Build
-
-&#x20;                                 |
-
-&#x20;                                 v
-
-&#x20;                        Backend Container
-
-&#x20;                                 |
-
-&#x20;                                 v
-
-&#x20;                        Kubernetes Service
-
-&#x20;                                 |
-
-&#x20;                                 v
-
-&#x20;                        Flask Backend Pods
-
-&#x20;                                 |
-
-&#x20;                                 v
-
-&#x20;                          PostgreSQL
-
-&#x20;                                 |
-
-&#x20;                                 v
-
-&#x20;                      Persistent Volume Claim
-
+``` text
+Developer
+   |
+   v
+GitHub repository
+   |
+   +--> GitHub Actions --> Run Python tests --> Build image --> Push to Docker Hub
+   |
+   v
+Docker Desktop Kubernetes
+   |
+   +--> Namespace: production-platform
+   |      |
+   |      +--> Flask backend Deployment
+   |      +--> Backend Service
+   |      +--> PostgreSQL Deployment
+   |      +--> PostgreSQL Service
+   |      +--> PersistentVolumeClaim
+   |      +--> Kubernetes Secret (database credentials)
+   |
+   +--> Namespace: monitoring
+          |
+          +--> Prometheus
+          +--> Grafana
+          +--> kube-state-metrics
+          +--> Node Exporter
+          +--> Prometheus Operator
 ```
 
+The monitoring stack currently collects metrics from Prometheus and
+several Kubernetes targets. Application-specific dashboards and Flask
+request metrics are not yet documented as complete features.
 
+## Repository Structure
 
-The backend runs in Kubernetes and connects to PostgreSQL through an internal Kubernetes Service. A PersistentVolumeClaim provides storage for PostgreSQL data.
-
-
-
-\## Key Features
-
-
-
-\### Application
-
-
-
-\* Flask REST endpoints for application status and database connectivity.
-
-\* Gunicorn as the production-oriented WSGI server.
-
-\* PostgreSQL connectivity using Psycopg.
-
-\* Automated unit tests for application endpoints and database connection scenarios.
-
-
-
-\### Docker
-
-
-
-\* Containerized Python backend.
-
-\* Non-root application user.
-
-\* Dependency installation from a requirements file.
-
-\* Container image build validation.
-
-
-
-\### Kubernetes
-
-
-
-\* Dedicated `production-platform` namespace.
-
-\* Backend Deployment with multiple replicas.
-
-\* Kubernetes Service for backend access.
-
-\* PostgreSQL Deployment and internal Service.
-
-\* PersistentVolumeClaim for database storage.
-
-\* Startup, liveness, and readiness probes.
-
-\* CPU and memory resource requests and limits.
-
-\* Container security settings, including a read-only root filesystem and dropped Linux capabilities.
-
-
-
-\### Database
-
-
-
-\* PostgreSQL integration with the Flask backend.
-
-\* Kubernetes Secret references for database credentials.
-
-\* Database health-check endpoint.
-
-\* Persistent storage validation across PostgreSQL Pod recreation.
-
-
-
-\### Helm
-
-
-
-\* Helm chart under `helm/production-platform`.
-
-\* Configurable chart values.
-
-\* Kubernetes templates for the backend Deployment and Service.
-
-\* Configuration for container security, resources, probes, and database connectivity.
-
-
-
-\### Continuous Integration
-
-
-
-The GitHub Actions workflow in `.github/workflows/ci.yml` is configured to:
-
-
-
-1\. Check out the repository.
-
-2\. Set up Python 3.12.
-
-3\. Install backend dependencies.
-
-4\. Run automated tests.
-
-5\. Build the Docker image without publishing it.
-
-
-
-\## Project Structure
-
-
-
-```text
-
+``` text
 production-kubernetes-platform/
-
-├── .github/
-
-│   └── workflows/
-
-│       └── ci.yml
-
 ├── backend/
-
 │   ├── app.py
-
 │   ├── Dockerfile
-
-│   └── requirements.txt
-
-├── helm/
-
-│   └── production-platform/
-
-│       ├── Chart.yaml
-
-│       ├── values.yaml
-
-│       └── templates/
-
-│           ├── \_helpers.tpl
-
-│           ├── backend-deployment.yaml
-
-│           └── backend-service.yaml
-
+│   └── ...
 ├── k8s/
-
-│   ├── namespace.yaml
-
-│   ├── backend-deployment.yaml
-
-│   ├── backend-service.yaml
-
-│   ├── postgres-deployment.yaml
-
-│   ├── postgres-pvc.yaml
-
-│   └── postgres-service.yaml
-
-├── tests/
-
-│   └── test\_app.py
-
-├── .dockerignore
-
+│   ├── ...
+│   └── postgres-secret.yaml       # local secret manifest; do not commit
+├── helm/
+│   └── production-platform/
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       └── templates/
+├── monitoring/
+│   ├── values.yaml
+│   └── kube-prometheus-stack/     # locally pulled Helm chart; do not commit rendered output
+├── scripts/
+│   └── deploy.ps1
+├── .github/
+│   └── workflows/
 ├── .gitignore
-
 └── README.md
-
 ```
 
+Some chart or manifest filenames may differ as the project evolves. Keep
+generated files, local credentials, and rendered monitoring manifests
+out of Git.
 
+## Application Endpoints
 
-The local `k8s/postgres-secret.yaml` file is intentionally excluded from Git because it contains environment-specific credentials.
+The Flask backend exposes these endpoints:
 
+  Endpoint       Purpose
+  -------------- --------------------------------
+  `/`            Basic application response
+  `/health`      Liveness/health check
+  `/ready`       Readiness check
+  `/info`        Application information
+  `/db-health`   Checks PostgreSQL connectivity
 
+The `/db-health` endpoint has been tested against the PostgreSQL
+database in the local Kubernetes environment.
 
-\## Prerequisites
+## Prerequisites
 
+Install and verify the following tools:
 
+-   Git
+-   Docker Desktop with Kubernetes enabled
+-   `kubectl`
+-   Helm
+-   Python 3.12 or a compatible Python version
+-   A Docker Hub account for image publishing
 
-Install and configure the following tools:
+Check the Kubernetes context before applying resources:
 
-
-
-\* Git
-
-\* Python 3.12 or compatible local Python version
-
-\* Docker Desktop
-
-\* Kubernetes enabled in Docker Desktop
-
-\* `kubectl`
-
-\* Helm
-
-
-
-Verify the tools:
-
-
-
-```powershell
-
-git --version
-
-python --version
-
-docker version
-
-kubectl version --client
-
-helm version
-
-```
-
-
-
-\## Run Automated Tests
-
-
-
-From the project root, activate your Python virtual environment and install the dependencies:
-
-
-
-```powershell
-
-.\\.venv\\Scripts\\Activate.ps1
-
-python -m pip install -r backend/requirements.txt
-
-```
-
-
-
-Run the test suite:
-
-
-
-```powershell
-
-python -m unittest discover -s tests -v
-
-```
-
-
-
-The test suite covers application endpoints and simulated database connectivity scenarios.
-
-
-
-\## Build the Docker Image
-
-
-
-Run the following command from the project root:
-
-
-
-```powershell
-
-docker build -t production-kubernetes-platform:local .\\backend
-
-```
-
-
-
-Verify that the image exists:
-
-
-
-```powershell
-
-docker images production-kubernetes-platform
-
-```
-
-
-
-\## Kubernetes Deployment
-
-
-
-Make sure Docker Desktop Kubernetes is enabled and your `kubectl` context points to the intended cluster.
-
-
-
-Check the active context:
-
-
-
-```powershell
-
+``` powershell
 kubectl config current-context
-
 kubectl get nodes
-
 ```
 
+The expected local context in the current setup is `docker-desktop`.
+Confirm it before running deployment commands.
 
+## Run Tests Locally
 
-Create the namespace:
+From the repository root, create and activate a Python virtual
+environment if the project uses one:
 
-
-
-```powershell
-
-kubectl apply -f .\\k8s\\namespace.yaml
-
+``` powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
+Install the backend requirements file if present, then run the tests:
 
-
-\*\*Database credentials:\*\* Create the required `postgres-secret` in the `production-platform` namespace before deploying PostgreSQL and the backend. Use a strong local development password. Do not commit real credentials, paste them into issue trackers, or publish them in documentation.
-
-
-
-The secret must provide these keys:
-
-
-
-\* `POSTGRES\_DB`
-
-\* `POSTGRES\_USER`
-
-\* `POSTGRES\_PASSWORD`
-
-
-
-Deploy PostgreSQL resources:
-
-
-
-```powershell
-
-kubectl apply -f .\\k8s\\postgres-pvc.yaml
-
-kubectl apply -f .\\k8s\\postgres-service.yaml
-
-kubectl apply -f .\\k8s\\postgres-deployment.yaml
-
+``` powershell
+python -m pip install -r .\backend\requirements.txt
+python -m unittest discover -s .\backend -p "test*.py" -v
 ```
 
+Adjust the requirements or test command if the filenames in your
+checkout differ. The current project test suite previously passed **6
+tests**.
 
+## Build and Run the Container
 
-Deploy the backend:
+Build the backend image from the repository root:
 
-
-
-```powershell
-
-kubectl apply -f .\\k8s\\backend-service.yaml
-
-kubectl apply -f .\\k8s\\backend-deployment.yaml
-
+``` powershell
+docker build -t production-kubernetes-platform:local .\backend
 ```
 
+Run it locally only when the image's required environment variables and
+database configuration are supplied. For the full database-backed setup,
+deploy through Kubernetes so the application can use the in-cluster
+PostgreSQL Service.
 
+## Kubernetes Deployment
 
-Check the resources:
+The application namespace used by the current deployment is
+`production-platform`.
 
+Inspect resources:
 
-
-```powershell
-
-kubectl get pods -n production-platform
-
-kubectl get services -n production-platform
-
+``` powershell
+kubectl get all -n production-platform
 kubectl get pvc -n production-platform
-
+kubectl get secrets -n production-platform
 ```
 
+Do not print or commit Secret values. The PostgreSQL credentials are
+stored in a Kubernetes Secret; the local secret manifest is excluded
+from version control.
 
+### Deploy with Helm
 
-These commands assume that the required database Secret exists and that the image referenced by the Deployment is available to the cluster.
+The Helm chart is located at `helm/production-platform`.
 
+Inspect the chart:
 
-
-\## Helm Validation
-
-
-
-Validate the chart:
-
-
-
-```powershell
-
-helm lint .\\helm\\production-platform
-
-helm template production-platform .\\helm\\production-platform
-
+``` powershell
+helm lint .\helm\production-platform
+helm template production-platform .\helm\production-platform -n production-platform
 ```
 
+The project includes a deployment helper:
 
+``` powershell
+.\scripts\deploy.ps1
+```
 
-Review the rendered Kubernetes resources before installing or upgrading a release.
+Review the script before executing it and confirm the Docker Desktop
+Kubernetes context is selected. The script performs a Helm upgrade,
+waits for rollout, and runs local health checks using port-forwarding.
 
+Check the release and workloads:
 
+``` powershell
+helm list -n production-platform
+kubectl rollout status deployment -n production-platform
+kubectl get pods,svc,pvc -n production-platform
+```
 
-\## Application Endpoints
+### Database Persistence
 
+PostgreSQL uses a PersistentVolumeClaim. Persistence across a PostgreSQL
+Pod restart has been verified in the local environment. This is **not**
+a backup, disaster-recovery, or production high-availability strategy.
 
+## Container and Kubernetes Security
 
-| Endpoint     | Purpose                          |
+The backend container and Kubernetes deployment are configured with
+hardening measures, including:
 
-| ------------ | -------------------------------- |
+-   Non-root execution (UID/GID `10001`)
+-   `RuntimeDefault` seccomp profile
+-   Privilege escalation disabled
+-   Read-only root filesystem
+-   All Linux capabilities dropped
+-   Writable temporary directory mounted separately
+-   CPU and memory requests/limits
+-   Startup, liveness, and readiness probes
 
-| `/`          | Application information          |
+Review the current manifests and Helm values to confirm the effective
+configuration after changes.
 
-| `/health`    | Application health check         |
+## CI/CD and Image Publishing
 
-| `/ready`     | Readiness check                  |
+The GitHub Actions workflow runs the Python tests, builds the Docker
+image, and publishes image tags to Docker Hub on pushes to the
+configured branch.
 
-| `/info`      | Application information endpoint |
+The workflow uses GitHub repository secrets:
 
-| `/db-health` | Database connectivity check      |
+-   `DOCKERHUB_USERNAME`
+-   `DOCKERHUB_TOKEN`
 
+Create these secrets in the repository settings; never store credentials
+in workflow YAML or commit them to Git. The current image repository is:
 
+``` text
+rafeekahamed/production-kubernetes-platform
+```
 
-The database health endpoint requires a working PostgreSQL connection. When the database is unavailable, the application reports an unsuccessful health result rather than a successful database connection.
+The pipeline publishes `latest` and a commit-SHA tag. Kubernetes
+deployment is currently triggered through the deployment script; do not
+assume the GitHub Actions workflow automatically deploys to the cluster.
 
+## Prometheus and Grafana Monitoring
 
+The `monitoring` namespace contains a Helm-installed
+`kube-prometheus-stack` with Prometheus, Grafana, Prometheus Operator,
+kube-state-metrics, and Node Exporter.
 
-\## Security Practices
+Check component status:
 
+``` powershell
+kubectl get pods -n monitoring
+helm status monitoring -n monitoring
+```
 
+### Access Grafana
 
-\* Run the application as a non-root user.
+In a dedicated PowerShell window, run:
 
-\* Use Kubernetes Secrets for database credentials.
+``` powershell
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+```
 
-\* Exclude local secrets and virtual environments from version control.
+Keep the command running and open:
 
-\* Apply container security settings, including a read-only root filesystem where configured.
+``` text
+http://localhost:3000
+```
 
-\* Define Kubernetes resource requests and limits.
+Log in using the configured Grafana administrator credentials. The
+password is stored in the `grafana-admin` Kubernetes Secret. Do not put
+the password in this README or commit it to source control.
 
-\* Use health probes to support Kubernetes health management.
+### Access Prometheus
 
-\* Review staged changes before committing code.
+If local port `9090` is already occupied, use `9091`:
 
+``` powershell
+kubectl port-forward -n monitoring svc/monitoring-prometheus 9091:9090
+```
 
+Keep the command running and open:
 
-Kubernetes Secrets provide configuration separation, but they should not be treated as a complete secrets-management solution by themselves.
+``` text
+http://localhost:9091
+```
 
+Run this PromQL query:
 
+``` promql
+up
+```
 
-\## Validation Status
+A value of `1` means a target scrape succeeded; `0` means the target was
+discovered but its scrape failed. In the current Docker Desktop
+environment, Prometheus, Grafana, the API server, kubelet, CoreDNS, and
+kube-state-metrics were observed reporting `1`. Some control-plane
+targets (including etcd, controller-manager, scheduler, and kube-proxy)
+reported `0`; inspect each target's **Last scrape error** at `/targets`
+before deciding whether a configuration change is appropriate. The Node
+Exporter result should also be verified rather than assumed healthy.
 
+### Monitoring Limitations
 
+-   Monitoring data uses ephemeral storage in the current configuration;
+    it is not guaranteed to survive Pod recreation.
+-   Prometheus target status can vary by local Kubernetes distribution.
+-   Flask-specific request metrics and a dedicated application
+    ServiceMonitor/dashboard still need to be configured and verified.
+-   No production alert delivery or long-term metrics retention is
+    claimed by this setup.
 
-The following items have been validated during development:
+## Troubleshooting
 
+### Port-forward says the local port is already in use
 
+An existing port-forward may still be running. Reuse it, stop the old
+process with `Ctrl+C` in its terminal, or choose another local port.
 
-\* Flask backend endpoints and database health checks.
+For example:
 
-\* Six automated unit tests passing locally.
+``` powershell
+kubectl port-forward -n monitoring svc/monitoring-prometheus 9091:9090
+```
 
-\* Docker image build.
+### A Pod is not ready
 
-\* Kubernetes backend and PostgreSQL deployment checks.
+``` powershell
+kubectl get pods -n production-platform
+kubectl describe pod <pod-name> -n production-platform
+kubectl logs <pod-name> -n production-platform
+```
 
-\* PostgreSQL connectivity from the backend.
+Replace `<pod-name>` with the actual Pod name. Inspect events and
+container logs before changing resources.
 
-\* Database record persistence across PostgreSQL Pod recreation.
+### Prometheus target is down
 
-\* Helm chart linting and template rendering.
+Open `http://localhost:9091/targets` while the Prometheus port-forward
+is running. Inspect the target's last scrape error. Do not disable
+monitoring targets merely to make the dashboard green; determine whether
+the target is expected to be scrapeable in the local cluster.
 
+## Safe Repository Practices
 
+Before committing, review the working tree and ignored files:
 
-The GitHub Actions workflow is configured locally; its execution on GitHub must be verified after the repository is pushed.
+``` powershell
+git status --short
+git check-ignore .\k8s\postgres-secret.yaml
+```
 
+Never commit:
 
+-   Kubernetes Secret manifests containing real credentials
+-   `.env` files or tokens
+-   Docker Hub access tokens
+-   Generated rendered monitoring manifests
+-   Local virtual environments or build artifacts
 
-Prometheus/Grafana integration, image publishing, deployment automation, and final end-to-end validation remain future project tasks.
+Rotate any credential that has accidentally been committed or exposed.
 
+## Current Status
 
+  -----------------------------------------------------------------------
+  Area                                Status
+  ----------------------------------- -----------------------------------
+  Flask backend and health endpoints  Implemented
 
-\## Future Improvements
+  Automated backend tests             6 tests previously passed
 
+  Docker image build and Docker Hub   Implemented through GitHub Actions
+  publishing                          
 
+  Kubernetes backend and PostgreSQL   Implemented in local cluster
+  deployment                          
 
-\* Add Prometheus metrics and Grafana dashboards.
+  PostgreSQL PVC                      Restart persistence verified
+                                      locally
 
-\* Publish versioned Docker images to a container registry.
+  Helm application chart              Implemented
 
-\* Extend CI with Helm linting and Kubernetes manifest validation.
+  PowerShell deployment helper        Implemented
 
-\* Add automated deployment workflows.
+  Prometheus and Grafana stack        Installed and running locally
 
-\* Add database backup and restore validation.
+  Kubernetes target monitoring        Partially verified; some local
+                                      control-plane targets report down
 
-\* Improve observability with structured logs and actionable alerts.
+  Flask application metrics and       Remaining work
+  dedicated dashboard                 
 
+  Persistent monitoring storage,      Not configured/verified as
+  backups, and alert delivery         production capabilities
+  -----------------------------------------------------------------------
 
+## Future Improvements
 
-\## Project Goal
+-   Expose and scrape Flask application metrics.
+-   Create a dedicated application dashboard in Grafana.
+-   Add and verify actionable alert rules.
+-   Decide on persistent storage and metrics retention requirements.
+-   Add repeatable end-to-end deployment validation.
+-   Document backup and recovery procedures before treating the database
+    as production-ready.
 
+## Author
 
+**Rafeek Ahamed M.**
 
-Demonstrate practical DevOps skills in containerization, Kubernetes operations, application and database integration, persistent storage, Helm, automated testing, and continuous integration.
+-   GitHub: https://github.com/RafeekAhamed
+-   LinkedIn: https://linkedin.com/in/rafeek-ahamed-devops
+-   Docker Hub:
+    https://hub.docker.com/r/rafeekahamed/production-kubernetes-platform
