@@ -1,0 +1,41 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and local secrets
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Local Kubernetes credentials
+k8s/postgres-secret.yaml
+
+# Backup files
+*.bak
+*.backup
+backend/app.py.backup
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# IDE and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Terraform state
+*.tfstate
+*.tfstate.*
+.terraform/
